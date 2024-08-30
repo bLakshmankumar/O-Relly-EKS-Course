@@ -1,0 +1,217 @@
+# Diff b/w Virtualization & Containers :
+========================================
+   > Virtualization :
+   ------------------
+     What It Is: Virtualization creates virtual machines (VMs) that emulate physical computers. Each VM runs its own full operating system (OS) and has its own resources.
+     How It Works: It uses a hypervisor to manage multiple VMs on a single physical machine. Each VM has its own OS and a full set of applications.
+     Overhead: Higher, because each VM includes a full OS, which consumes more resources.
+   > Containers :
+   --------------
+     What It Is: Containers package applications and their dependencies together but share the host OS kernel. They run isolated environments within the same OS.
+     How It Works: Containers use a container runtime (like Docker) to run applications in isolated environments on the same OS, with a shared kernel.
+     Overhead: Lower, because containers share the host OS kernel and only package the application and its dependencies.
+     In summary, virtualization involves running multiple OSes on one machine, while containers share the same OS and are more lightweight.
+
+# Understanding Container runtime in kubernetes :
+=================================================
+   > The container runtime is a platform-independent component used to run containers
+   > Runtimes are standardized in the Container Runtime Interface (CRI).
+   >  Commonly used container runtimes are "containerd" and "cri-o" Runtimes allow containers to be started on any operating system or cloud platform.
+
+  1) Containerd :
+  ===============
+     > Containerd is an industry-standard core container runtime.
+     > It was originally developed by Docker but now is an independent project under the Cloud Native Computing Foundation (CNCF).
+     > Containerd handles container lifecycle management, including creation, execution, and deletion of containers.
+
+  2) CRI-O :
+  ==========
+     > CRI-O is a lightweight container runtime for Kubernetes, designed to implement the Kubernetes Container Runtime Interface (CRI). 
+     > It provides a stable and performant runtime for Kubernetes without unnecessary additional features.
+     > It uses existing OCI (Open Container Initiative) standards and tools, such as runc for running containers, and avoids adding extra features beyond what Kubernetes requires.
+
+  3) Podman :
+  ===========
+     > Podman is a daemonless container engine for developing, managing, and running OCI containers on Linux systems. 
+     > It is developed by Red Hat and focuses on ease of use and flexibility.
+     > Podman supports running containers as a non-root user, enhancing security by minimizing privileges.
+     > It can generate Kubernetes YAML files from existing containers, making it easier to transition between local development and Kubernetes deployments.
+
+# What is kubernetes ?
+======================
+   > Kubernetes is an open-source platform for automating the deployment, scaling, and management of containerized applications. 
+   > It helps you manage clusters of containers, ensuring they run efficiently, can handle increased load, and recover from failures. 
+   > Essentially, Kubernetes makes it easier to run applications reliably across different environments. 
+
+Explanation of each Kubernetes component :
+==========================================
+    > Nodes :
+    ---------
+      What It Is: A node is a single machine (physical or virtual) in a Kubernetes cluster where applications run.
+      How It Works: Nodes provide the runtime environment for containers and manage the resources needed to run your workloads.
+    > Pods :
+    --------
+      What It Is: A pod is the smallest deployable unit in Kubernetes. It can contain one or more containers that share the same network namespace.
+      How It Works: Pods run containers and share their storage and networking. They are designed to run a single instance of a given application or service.
+    > Services :
+    ------------
+      What It Is: A service is an abstraction that defines a logical set of pods and a policy to access them.
+      How It Works: Services enable communication between different parts of your application, providing a stable IP address and DNS name for accessing pods.
+    > Ingress :
+    -----------
+      What It Is: An ingress is a collection of rules that allow inbound connections to reach your services.
+      How It Works: Ingress controllers manage the routing of external traffic to the appropriate services based on URL paths or hostnames.
+    > Deployments :
+    ---------------
+      What It Is: A deployment is a Kubernetes resource that manages the deployment and scaling of a set of pods.
+      How It Works: Deployments ensure that a specified number of pods are running and provide rolling updates to deploy new versions of an application.
+    > ConfigMaps :
+    ---------------
+      What It Is: ConfigMaps are used to store configuration data that can be used by applications running in pods.
+      How It Works: ConfigMaps allow you to decouple configuration settings from your application code, making it easier to manage and update configurations.
+    > Secrets :
+    -----------
+      What It Is: Secrets are used to store sensitive information, such as passwords or API keys.
+      How It Works: Secrets are stored securely and can be accessed by pods without exposing the sensitive data in plain text.
+    > Persistent Volume Claims (PVCs) :
+    -----------------------------------
+      What It Is: A PVC is a request for storage by a user, specifying size and access modes.
+      How It Works: PVCs allow pods to request storage resources without needing to know the details of the underlying storage infrastructure.
+    > Persistent Volumes (PVs) :
+    -----------------------------
+      What It Is: A PV is a piece of storage in the cluster that has been provisioned by an administrator.
+      How It Works: PVs provide storage resources to pods, and they can be dynamically or statically provisioned.
+    > ReplicaSets :
+    ---------------
+      What It Is: A ReplicaSet ensures that a specified number of pod replicas are running at any given time.
+      How It Works: ReplicaSets are used by Deployments to maintain the desired number of pod replicas and ensure availability.
+    > StatefulSets :
+    ----------------
+      What It Is: A StatefulSet manages the deployment and scaling of stateful applications.
+      How It Works: StatefulSets provide stable, unique network identities and stable storage for each pod, which is useful for applications requiring persistent state.
+    > DaemonSets :
+    --------------
+      What It Is: A DaemonSet ensures that a copy of a pod runs on all (or some) nodes in the cluster.
+      How It Works: DaemonSets are used for system-level daemons or monitoring agents that need to run on every node.
+    > CronJobs :
+    ------------
+      What It Is: A CronJob runs scheduled tasks at specified intervals.
+      How It Works: CronJobs allow you to automate tasks, such as backups or periodic reports, based on a schedule defined using cron syntax.
+
+# AWS VPC CNI for Kubernetes :
+==============================
+     Each host gets multiple ENIs and allocate their secondary IP addresses.
+     Run local IP address manager (L-IPAM) to manage IP addresses.
+     Number of ENIs dependent upon instance type:
+            https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/using -eni.html#AvailablelpPerENI
+     Max IPs per host = min (N* M-N), subnet's free IP)
+     Example: t3.medium: 3 max interfaces and 6 Private IPv4 addresses per interface. => 18 Addresses
+Explanation in more-detailed :
+------------------------------
+     In AWS, the VPC CNI (Container Network Interface) plugin for Kubernetes handles the networking for your Kubernetes pods by assigning them IP addresses from your VPC. 
+
+ Here’s a breakdown of how it works based on your explanation :
+ --------------------------------------------------------------
+   > ENIs (Elastic Network Interfaces): Each EC2 instance used as a Kubernetes node can have multiple ENIs. An ENI is essentially a virtual network card that allows the instance to connect to the VPC network.
+   > Secondary IP Addresses: Each ENI can be assigned multiple secondary IP addresses. The VPC CNI plugin uses these secondary IP addresses to assign IPs to the Kubernetes pods running on the node.
+   > Instance Type Limits: The number of ENIs and IP addresses you can have depends on the instance type:
+        For example, a t3.medium instance can have up to 3 ENIs, with each ENI supporting up to 6 private IPv4 addresses. This results in a maximum of 18 IP addresses available for pods on a single t3.medium instance.
+   > IP Allocation Formula: To calculate the maximum number of pods you can run on a node, use the formula:
+         Max IPs per host = min (N* M-N), subnet's free IP)
+            Where:
+              N = Number of ENIs
+              M = Number of IPs per ENI
+              Subnet's free IP = Available IP addresses in the subnet
+         For a t3.medium instance, this would be: Max IPs per host=min(3×6−3,Available IPs in subnet)=min(15,Available IPs in subnet)
+    > Overlay Network: The VPC CNI plugin essentially creates a network overlay on top of AWS's networking infrastructure. This overlay allows Kubernetes pods to communicate using IPs from the VPC, integrating with AWS’s security features like security groups and network ACLs.
+    > Node and Pod Limits: The number of ENIs and the IP address allocation constraints define how many pods can run on a node. The VPC CNI plugin runs on each node, and its configuration will dictate the networking capabilities and limits for the pods.
+  In summary, the VPC CNI plugin leverages AWS’s ENIs and IP addresses to ensure that Kubernetes pods have direct network access and can be managed with AWS’s security tools, while adhering to the instance type’s network interface and IP address limitations.
+
+# The components of a Kubernetes cluster
+=========================================
+  Core Components :
+  -----------------
+     A Kubernetes cluster consists of a control plane and one or more worker nodes.
+  Here's a brief overview of the main components: 
+  -----------------------------------------------
+    Master (or) Control Plane Components :
+    ======================================
+      Manage the overall state of the cluster:
+        > kube-apiserver 
+        ----------------
+            The core component server that exposes the Kubernetes HTTP API
+        > etcd
+        ------
+            Consistent and highly-available key value store for all API server data
+        > kube-scheduler
+        ----------------
+            Looks for Pods not yet bound to a node, and assigns each Pod to a suitable node.
+        > kube-controller-manager
+        -------------------------
+            Runs controllers to implement Kubernetels API behavior.
+                The Kubernetes Controller Manager is a key component that helps manage and maintain the desired state of a Kubernetes cluster. 
+                Here’s a simple explanation of its main controllers:
+                ----------------------------------------------------
+                  Node Controller: Keeps track of the nodes in the cluster. It notices when nodes go down or become unreachable and takes appropriate actions, such as marking them as unavailable or rescheduling their pods.
+                  Replication Controller: Ensures the right number of pod replicas are running. If some pods fail or are deleted, it creates new ones to maintain the desired count.
+                  Endpoints Controller: Manages the connection between services and pods. It updates service endpoints so that services know which pods are available to handle requests.
+                  Service Account & Token Controllers: Automatically creates default service accounts and API access tokens for different namespaces. These are used by pods and other resources to authenticate and interact with the Kubernetes API.
+        > cloud-controller-manager (optional)
+        -------------------------------------
+            Integrates with underlying cloud provider(s).
+    Node Components :
+    =================
+      Run on every node, maintaining running pods and providing the Kubernetes runtime environment:
+        > kubelet 
+        ---------
+            Ensures that Pods are running, including their containers.
+        > kube-proxy (optional)
+        -----------------------
+            Maintains network rules on nodes to implement Services.
+        > Container runtime
+        -------------------
+            Software responsible for running containers.
+
+   > It can be managed in different ways :
+   ------------------------------------
+       We can manage/setup/install k8s in cloud (like - aws, azure, gcp & etc)
+       We can manage/setup/install k8s in an on-premise by using kubeadm, kops and etc.
+       We can manage/setup/install k8s in minimized learning environements like minikube as well.
+
+# Setup k8s cluster on eks(aws) :
+==================================
+   > Elastic Kubernetes Services (EKS) is managed Kubernetes by Amazon
+   > Configuration can be done using the web user interface, or eksctl, which needs to be installed and configured separately
+   > The minimal setup consists of the cluster and the node group, after which the applications can be started 
+   > It is recommended to set up the cluster automatically, using eksctl.
+ # Demo: Using eksctl to Configure EKS :
+ =======================================
+   Step 1: Set Up AWS IAM User :
+   -----------------------------
+       Create an IAM User with Programmatic Access:
+          Go to the AWS IAM Management Console.
+          Create a new user with Programmatic access to get an Access Key ID and Secret Access Key.
+          download Access key as well as secret acces-key
+          Attach Required Policies:
+              Attach the AmazonEKSClusterPolicy and AmazonEKSWorkerNodePolicy policies to your IAM user.
+   Step 2: Install AWS CLI :
+   -------------------------
+       sudo apt update
+       sudo apt install awscli -y
+     Configure AWS CLI: 
+       aws configure     # Enter your Access Key ID, Secret Access Key, default region name, and default output format when prompted.
+   Step 3: Install kubectl : [# Download and Install kubectl]
+   --------------------------
+       curl --silent --location "https://github.com/weaveworks/eksctl/releases/latest/download/eksctl_$(uname -s)_amd64.tar.gz" | tar xz -C /tmp
+       sudo mv /tmp/eksctl /usr/local/bin
+   Step 4: Install eksctl : [ # Download and Install eksctl]
+   -------------------------
+       curl --silent --location "https://github.com/weaveworks/eksctl/releases/latest/download/eksctl_$(uname -s)_amd64.tar.gz" | tar xz -C /tmp
+       sudo mv /tmp/eksctl /usr/local/bin
+     Verify Installation:
+       eksctl version
+   Step 5: Create an EKS Cluster :
+   -------------------------------
+        eksctl create cluster --name my-cluster --region us-west-2 --nodegroup-name my-nodes --node-type t3.medium --nodes 3
+      Verify the Cluster:
+        kubectl get nodes 
